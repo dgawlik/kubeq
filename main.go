@@ -45,15 +45,15 @@ func translateQuery(query string, dict map[string]string) string {
 
 func main() {
 	builtinQueries := map[string]string{
-		"podsForImage":          "select(.items.[].spec.containers.[].image | test(\"$1\", \"g\"))",
-		"podsForName":           "select(.items[].metadata.name | test(\"$1\", \"g\"))",
-		"podsForLabel":          ".items | map(select(.metadata.labels.$1 == $2))",
-		"podsForMountPath":      ".items | map(select(.spec.containers.[].volumeMounts.[].mountPath == $1))",
-		"podsForReadinessProbe": ".items | map(select(.spec.containers.[].readinessProbe.httpGet.path == $1 and .spec.containers.[].readinessProbe.httpGet.port == $2))",
+		"podsForImage":          ".items | map(select(.spec.containers[].image | test(\"$1\", \"g\")))",
+		"podsForName":           ".items | map(select(.metadata.name | test(\"$1\", \"g\")))",
+		"podsForLabel":          ".items | map(select(.metadata.labels[\"$1\"] == \"$2\"))",
+		"podsForMountPath":      ".items | map(select(.spec.containers.[].volumeMounts.[].mountPath == \"$1\"))",
+		"podsForReadinessProbe": ".items | map(select(.spec.containers.[].readinessProbe.httpGet.path == \"$1\" and .spec.containers.[].readinessProbe.httpGet.port == $2))",
 		"servicesForTargetPort": ".items | map(select(.spec.ports[].targetPort == $1))",
 		"servicesForPort":       ".items | map(select(.spec.ports[].port == $1))",
-		"servicesForSelector":   ".items | map(select(.spec.selector.$1 == $2))",
-		"roleByResourceName":    ".items | map(select(.rules.resourceNames. == $1))",
+		"servicesForSelector":   ".items | map(select(.spec.selector[\"$1\"] == \"$2\"))",
+		"roleByResourceName":    "select(.items.[].rules.[].resourceNames.[] | test(\"$1\"))",
 	}
 
 	args := os.Args[1:]
@@ -74,8 +74,6 @@ func main() {
 	} else {
 		configFile = fmt.Sprintf("%s%c.kubequery", home, os.PathSeparator)
 	}
-
-	fmt.Println(configFile)
 
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		file, err := os.Create(configFile)
