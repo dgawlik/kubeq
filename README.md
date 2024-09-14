@@ -67,4 +67,8 @@ kubeq -x roles -n kube-system  -q 'rolesByResourceName(a)'
 
 ## Hacking
 
-True power comes from editing .kubequery file and adding your own selectors. So go ahead and customize!
+True power comes from editing .kubequery file and adding your own selectors. So go ahead and customize
+
+## Binaries
+
+Refer to artifact of this [build](https://github.com/dgawlik/kubeq/actions/runs/10861685145)
