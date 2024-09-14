@@ -30,39 +30,39 @@ kubectl get roles ...
 ## Presets
 
 ```
-kubeq -n kube-system -q 'podsForImage(etcd)'
+kubeq -q 'podsForImage(image)'
 ```
 
 ```
-kubeq -n kube-system -q 'podsForName(kube-dns)'
+kubeq -q 'podsForName(name)'
 ```
 
 ```
-kubeq -n kube-system -q 'podsForLabel(k8s-app,kube-dns)'
+kubeq -q 'podsForLabel(labelLeft,labelRight)'
 ```
 
 ```
-kubeq -n kube-system -q 'podsForMountPath(/etc/coredns)'
+kubeq -q 'podsForMountPath(path)'
 ```
 
 ```
-kubeq -n kube-system -q 'podsForReadinessProbe(/ready, 8181)'
+kubeq -q 'podsForReadinessProbe(/path, port)'
 ```
 
 ```
-kubeq -x services -n kube-system  -q 'servicesForTargetPort(53)'
+kubeq -x services  -q 'servicesForTargetPort(port)'
 ```
 
 ```
-kubeq -x services -n kube-system  -q 'servicesForPort(53)'
+kubeq -x services  -q 'servicesForPort(port)'
 ```
 
 ```
-kubeq -x services -n kube-system  -q 'servicesForSelector(k8s-app, kube-dns)'
+kubeq -x services -q 'servicesForSelector(labelLeft, labelRight)'
 ```
 
 ```
-kubeq -x roles -n kube-system  -q 'rolesByResourceName(a)'
+kubeq -x roles  -q 'rolesByResourceName(name)'
 ```
 
 ## Hacking
