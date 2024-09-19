@@ -120,4 +120,4 @@ True power comes from editing .kubequery file and customizing the defined querie
 
 ## Binaries
 
-Refer to artifact of this [build](https://github.com/dgawlik/kubeq/actions/runs/10861685145)
+Refer to artifacts of this [build](https://github.com/dgawlik/kubeq/actions/runs/10946695711)
