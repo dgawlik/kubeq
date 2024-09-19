@@ -1,0 +1,29 @@
+
+
+{
+    "shorts": {
+        "podImage": ".spec.containers[]?.image",
+        "resourceName": ".metadata.name",
+        "podMountPath": ".spec.containers[]?.volumeMounts[]?.mountPath",
+        "serviceTargetPort": ".spec.ports[]?.targetPort",
+        "servicePort": ".spec.ports[]?.port"
+    },
+    
+    "selects": {
+        "all": ".",
+        "names": "$resourceName",
+        "info": "{ \"name\": $resourceName, \"metadata\": .metadata}"
+    },
+
+    "filters": {
+        "id":                    "select(.)",
+        "podsForImage":          "select(.spec.containers) | select($podImage | test(\"$1\"))",
+		"podsForName":           "select($resourceName | test(\"$1\"))",
+		"podsForLabel":          "select(.metadata.labels[\"$1\"] == \"$2\")",
+		"podsForMountPath":      "select($podMountPath == \"$1\")",
+		"podsForReadinessProbe": "select(.spec.containers[]?.readinessProbe.httpGet.path == \"$1\" and .spec.containers[]?.readinessProbe.httpGet.port == $2)",
+		"servicesForTargetPort": "select($serviceTargetPort == $1)",
+		"servicesForPort":       "select($servicePort == $1)",
+		"servicesForSelector":   "select(.spec.selector[\"$1\"] == \"$2\")"
+    }
+}

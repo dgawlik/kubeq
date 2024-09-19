@@ -1,18 +1,25 @@
 # kubeq
 
-This tool makes filtering of resources via kubectl a little easier. It wraps kubectl and lets you
-define "aliases" to most common used jsonpath queries. For filtering it uses go implementation of jq.
+This small Go program acts as a custodian for your kubectl queries (gets only). Motivation: jsonpath is hard (and has bugs) jq syntax is even harder. When you spent couple of hours crafting your query you want
+to put it somewhere. This is where kubeq comes in. It lets you save common queries in home folder and use
+them by name.
+
+## Requirements
+
+* kubectl
+* jq
+
 
 ## How it works
 
 During startup kubeq checks for presence of presets file in home directory. For linux $HOME and for 
-windows %APPDATA% is checked for presence of .kubequery. For the first time kubeq creates the file
+windows %APPDATA% is checked for .kubequery file. For the first time it creates the file
 with defaults which you can edit later.
 
-Then it parses the commandline args. In particular '-q <query>' is pulled out and parsed. Then it translates it to jq query with parameter substitutions. So it is equivalent of 
+In a nutshell the tool does the same as:
 
 ```
-kubectl get all -o json | jq <<translatedQuery>>
+kubectl get all -o json | jq <<expandedQuery>>
 ```
 
 If you want to override all subcommand then use -x resourceType. Example
@@ -29,45 +36,87 @@ kubectl get roles ...
 
 ## Presets
 
+This is the defaults embedded in binary:
+
+```json
+
+
+{
+    "shorts": {
+        "podImage": ".spec.containers[]?.image",
+        "resourceName": ".metadata.name",
+        "podMountPath": ".spec.containers[]?.volumeMounts[]?.mountPath",
+        "serviceTargetPort": ".spec.ports[]?.targetPort",
+        "servicePort": ".spec.ports[]?.port"
+    },
+    
+    "selects": {
+        "all": ".",
+        "names": "$resourceName",
+        "info": "{ \"name\": $resourceName, \"metadata\": .metadata}"
+    },
+
+    "filters": {
+        "id":                    "select(.)",
+        "podsForImage":          "select(.spec.containers) | select($podImage | test(\"$1\"))",
+		"podsForName":           "select($resourceName | test(\"$1\"))",
+		"podsForLabel":          "select(.metadata.labels[\"$1\"] == \"$2\")",
+		"podsForMountPath":      "select($podMountPath == \"$1\")",
+		"podsForReadinessProbe": "select(.spec.containers[]?.readinessProbe.httpGet.path == \"$1\" and .spec.containers[]?.readinessProbe.httpGet.port == $2)",
+		"servicesForTargetPort": "select($serviceTargetPort == $1)",
+		"servicesForPort":       "select($servicePort == $1)",
+		"servicesForSelector":   "select(.spec.selector[\"$1\"] == \"$2\")"
+    }
+}
 ```
-kubeq -q 'podsForImage(image)'
+
+**shorts**: Kubectl resources have lengthy paths, so this is where you can write shortcuts. The keys are expanded in selects and filters.
+
+**selects**: when you specify ```-s``` flag you can select what is picked out for each object in list.
+
+**filters** this part is how you exclude uninteresting parts of the .items[]. They are specified as functions and parameters $1, $2 in definition are args passed.
+
+Examples:
+
+```
+kubeq -s names -w 'podsForImage(image)'
 ```
 
 ```
-kubeq -q 'podsForName(name)'
+kubeq -s name -n <namespace> -w 'podsForName(name)'
 ```
 
 ```
-kubeq -q 'podsForLabel(labelLeft,labelRight)'
+kubeq -w 'podsForLabel(labelLeft,labelRight)'
 ```
 
 ```
-kubeq -q 'podsForMountPath(path)'
+kubeq -w 'podsForMountPath(path)'
 ```
 
 ```
-kubeq -q 'podsForReadinessProbe(/path, port)'
+kubeq -s info -w 'podsForReadinessProbe(/path, port)'
 ```
 
 ```
-kubeq -x services  -q 'servicesForTargetPort(port)'
+kubeq -x services  -w 'servicesForTargetPort(port)'
 ```
 
 ```
-kubeq -x services  -q 'servicesForPort(port)'
+kubeq -x services  -w 'servicesForPort(port)'
 ```
 
 ```
-kubeq -x services -q 'servicesForSelector(labelLeft, labelRight)'
+kubeq -x services -w 'servicesForSelector(labelLeft, labelRight)'
 ```
 
 ```
-kubeq -x roles  -q 'rolesByResourceName(name)'
+kubeq -x roles  -w 'rolesByResourceName(name)'
 ```
 
 ## Hacking
 
-True power comes from editing .kubequery file and adding your own selectors. So go ahead and customize
+True power comes from editing .kubequery file and customizing the defined queries.
 
 ## Binaries
 
